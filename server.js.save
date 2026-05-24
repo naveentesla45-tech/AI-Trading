@@ -1,0 +1,236 @@
+
+
+
+
+
+
+
+import express from "express";
+
+import dotenv from "dotenv";
+
+import { KiteConnect } from "kiteconnect";
+
+
+
+dotenv.config();
+
+
+
+const app = express();
+
+
+
+app.use(express.json());
+
+
+
+const kc = new KiteConnect({
+
+  api_key: process.env.API_KEY
+
+});
+
+
+
+app.get("/", async (req, res) => {
+
+
+
+  const requestToken = req.query.request_token;
+
+
+
+  if (!requestToken) {
+
+    return res.send("Waiting for Zerodha login...");
+
+  }
+
+
+
+  try {
+
+
+
+    const response = await kc.generateSession(
+
+      requestToken,
+
+      process.env.API_SECRET
+
+    );
+
+
+
+    console.log(response);
+
+
+
+    res.send(`
+
+      <h2>Access Token Generated Successfully</h2>
+
+      <pre>${response.access_token}</pre>
+
+    `);
+
+
+
+  } catch (err) {
+
+
+
+    console.error(err);
+
+
+
+    res.send("Error generating access token");
+
+
+
+  }
+
+
+
+});
+
+
+
+app.get("/health", (req, res) => {
+
+
+
+  res.json({
+
+    status: "success",
+
+    message: "Server healthy"
+
+  });
+
+
+
+});
+
+
+
+app.get("/holdings", async (req, res) => {
+
+
+
+  try {
+
+
+
+    kc.setAccessToken(process.env.ACCESS_TOKEN);
+
+
+
+    const holdings = await kc.getHoldings();
+
+
+
+    res.json(holdings);
+
+
+
+  } catch (err) {
+
+
+
+    console.error(err);
+
+
+
+    res.json({
+
+      error: err.message
+
+    });
+
+
+
+  }
+
+
+
+});
+
+
+
+app.get("/buy-test", async (req, res) => {
+
+
+
+  try {
+
+
+
+    kc.setAccessToken(process.env.ACCESS_TOKEN);
+
+
+
+    const order = await kc.placeOrder("regular", {
+
+      exchange: "NSE",
+
+      tradingsymbol: "INFY",
+
+      transaction_type: "BUY",
+
+      quantity: 1,
+
+      product: "CNC",
+
+      order_type: "MARKET"
+
+    });
+
+
+
+    res.json({
+
+      success: true,
+
+      order
+
+    });
+
+
+
+  } catch (err) {
+
+
+
+    console.error(err);
+
+
+
+    res.json({
+
+      success: false,
+
+      error: err.message
+
+    });
+
+
+
+  }
+
+
+
+});
+
+
+
+const PORT = 3000;
+
+
+
+app.listen(PORT, () => {
+
+  console.log(`Server running on port ${PORT}`);
+
+});
