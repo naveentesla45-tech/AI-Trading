@@ -39,8 +39,6 @@ function getSignal({ rsi, sma, price, momentum }) {
 
 }
 
-
-
 async function analyzeStock(symbol) {
 
   try {
@@ -441,227 +439,6 @@ async function getLiveOptionSymbols() {
 
 
 }
-
-async function sendTelegram(message) {
-
-
-
-  try {
-
-
-
-    const url =
-
-
-
-      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-
-
-    await axios.post(url, {
-
-
-
-      chat_id:
-
-        process.env.TELEGRAM_CHAT_ID,
-
-
-
-      text: message
-
-
-
-    });
-
-
-
-  } catch (err) {
-
-
-
-    console.log(
-
-      "Telegram Error:",
-
-      err.message
-
-    );
-
-
-
-  }
-
-
-
-}
-let lastUpdateId = 0;
-async function checkTelegramCommands() {
-
-
-
-  try {
-
-
-
-    const response =
-
-      await axios.get(
-
-
-
-`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getUpdates`
-
-
-
-      );
-
-
-
-    const updates =
-
-      response.data.result;
-
-
-
-    for (const update of updates) {
-
-
-
-      if (
-
-        update.update_id
-
-        <= lastUpdateId
-
-      ) {
-
-        continue;
-
-      }
-
-
-
-      lastUpdateId =
-
-        update.update_id;
-
-
-
-      const text =
-
-        update.message?.text;
-
-
-
-      if (!text) continue;
-
-
-
-      // RATE COMMAND
-
-
-
-      if (text === "/rate") {
-
-
-
-        const data =
-
-          await getOptionPremiums();
-
-
-
-        if (data.error) {
-
-
-
-          await sendTelegram(
-
-            `âŒ ${data.error}`
-
-          );
-
-
-
-          continue;
-
-
-
-        }
-
-
-
-        await sendTelegram(
-
-
-
-`í ½í³Š LIVE MARKET
-
-
-
-Spot:
-
-${data.spot}
-
-
-
-ATM:
-
-${data.atm}
-
-
-
-CE:
-
-${data.ce.ltp}
-
-
-
-PE:
-
-${data.pe.ltp}
-
-
-
-Combined:
-
-${data.combinedPremium}`
-
-
-
-        );
-
-
-
-      }
-
-
-
-    }
-
-
-
-  } catch (err) {
-
-
-
-    
-console.log(
-
-      "Telegram Poll Error:",
-
-      err.message
-
-    );
-
-
-
-  }
-
-
-
-}
 async function getOptionPremiums() {
 
 
@@ -952,8 +729,7 @@ function saveState() {
 
 
 
-    
-console.log(
+    console.log(
 
       "Save Error:",
 
@@ -1310,38 +1086,7 @@ if (
 
     console.log(paperTrade);
 
-saveState();
-sendTelegram(
 
-
-
-`í ½í³ˆ PAPER STRADDLE ENTRY
-
-
-
-ATM: ${paperTrade.atm}
-
-
-
-CE: ${paperTrade.ce.symbol}
-
-@ ${paperTrade.ce.sellPrice}
-
-
-
-PE: ${paperTrade.pe.symbol}
-
-@ ${paperTrade.pe.sellPrice}
-
-
-
-Combined:
-
-${paperTrade.combinedEntry}`
-
-
-
-);
 
   } catch (err) {
 
@@ -1440,13 +1185,7 @@ riskManager.slHits++;
 
         );
 
-sendTelegram(
 
-  `âŒ CE SL HIT
-
-${paperTrade.ce.symbol}`
-
-);
 
       }
 
@@ -1494,13 +1233,7 @@ riskManager.slHits++;
 
         );
 
-sendTelegram(
 
-  `âŒ PE SL HIT
-
-${paperTrade.pe.symbol}`
-
-);
 
       }
 
@@ -1531,7 +1264,6 @@ riskManager.currentPnL =
 
     );
 
-
 if (
 
 
@@ -1559,11 +1291,7 @@ if (
     "MAX DAILY LOSS HIT"
 
   );
-sendTelegram(
 
-  "í ½í»‘ MAX DAILY LOSS HIT"
-
-);
 
 
 }
@@ -1620,39 +1348,21 @@ if (
 
       );
 
-sendTelegram(
 
-
-
-`í ¼í¾¯ TARGET ACHIEVED
-
-
-
-PnL:
-
-â‚¹${paperTrade.pnl}`
-
-
-
-);
 
     }
 
 
 
-saveState();
+  } catch (err) {
 
 
 
-} catch (err) {
+    console.log(err.message);
 
 
 
-  console.log(err.message);
-
-
-
-}
+  }
 
 
 
@@ -1668,7 +1378,7 @@ function autoExitTrade() {
     paperTrade.active = false;
 
 
-saveState();
+
     console.log(
 
       "AUTO 3:15 EXIT EXECUTED"
@@ -1686,18 +1396,19 @@ saveState();
 import dns from "dns";
 dns.setDefaultResultOrder("ipv4first");
 
-import dotenv from "dotenv";
 
-dotenv.config();
 
 import express from "express";
 
+import dotenv from "dotenv";
 
 import axios from "axios";
 
 import { KiteConnect } from "kiteconnect";
 
 
+
+dotenv.config();
 
 
 
@@ -2852,7 +2563,7 @@ cron.schedule("30 9 * * 1-5", () => {
 
 // EVERY 10 SECONDS MONITOR
 
-cron.schedule("*/30 * * * * *", () => {
+cron.schedule("*/10 * * * * *", () => {
 
 
 
@@ -2862,15 +2573,7 @@ cron.schedule("*/30 * * * * *", () => {
 
 });
 
-cron.schedule("*/30 * * * * *", () => {
 
-
-
-  checkTelegramCommands();
-
-
-
-});
 
 // 3:15 PM EXIT
 
@@ -2905,31 +2608,6 @@ app.get("/risk-status", (req, res) => {
 
 
 });
-app.get("/state", (req, res) => {
-
-
-
-  res.json({
-
-
-
-    success: true,
-
-
-
-    paperTrade,
-
-
-
-    riskManager
-
-
-
-  });
-
-
-
-});
 const PORT = 3000;
 
 
@@ -2937,14 +2615,5 @@ const PORT = 3000;
 app.listen(PORT, () => {
 
   console.log(`Server running on port ${PORT}`);
-sendTelegram(
 
-  "í ½íº€ AI Trading Bot Started"
-
-);sendTelegram("âœ… Telegram Connected");
-sendTelegram(
-
-"âœ… Node Telegram Working"
-
-);
 });

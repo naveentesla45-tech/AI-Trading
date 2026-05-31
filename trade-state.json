@@ -1,0 +1,32 @@
+{
+  "paperTrade": {
+    "active": false,
+    "entryTime": "2026-05-29T04:48:52.118Z",
+    "spot": 23932.75,
+    "atm": 23950,
+    "ce": {
+      "symbol": "NIFTY2660223950CE",
+      "sellPrice": 155.7,
+      "sl": 186.84,
+      "active": true
+    },
+    "pe": {
+      "symbol": "NIFTY2660223950PE",
+      "sellPrice": 116.9,
+      "sl": 140.28,
+      "active": true
+    },
+    "combinedEntry": 272.6,
+    "targetPremium": 177.19,
+    "pnl": 42.25
+  },
+  "riskManager": {
+    "tradingEnabled": true,
+    "maxDailyLoss": -3000,
+    "currentPnL": 0,
+    "slHits": 0,
+    "maxSlHits": 2,
+    "tradingStopped": false,
+    "lastResetDate": "Fri May 29 2026"
+  }
+}
